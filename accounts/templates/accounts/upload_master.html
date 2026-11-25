@@ -1,0 +1,41 @@
+{% extends 'accounts/base.html' %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); font-family: Arial, sans-serif;">
+    <h2 style="color: #6B4636; text-align: center; margin-bottom: 25px;">Institutional Whitelist Administrator</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 12px; margin-bottom: 15px; border-radius: 6px; font-weight: bold; {% if 'error' in message.tags %}background: #FEE2E2; color: #B91C1C;{% else %}background: #D1FAE5; color: #065F46;{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <label style="display:block; font-weight:bold; margin-bottom:6px; color:#362824;">1. Upload Students Spreadsheet (.xlsx)</label>
+        <input type="file" name="student_excel" accept=".xlsx" style="width:100%; margin-bottom:20px;">
+        <small style="display:block; margin-top:-14px; margin-bottom:20px; color:#593F3B;">Required columns: pin, academic_year (YYYY-YYYY), mobile_number, full_name, branch.</small>
+
+        <label style="display:block; font-weight:bold; margin-bottom:6px; color:#362824;">2. Upload Faculty In-Charges Spreadsheet (.xlsx)</label>
+        <input type="file" name="in_charge_excel" accept=".xlsx" style="width:100%; margin-bottom:20px;">
+        <small style="display:block; margin-top:-14px; margin-bottom:20px; color:#593F3B;">Required columns: identity_code, mobile_number, full_name, assigned_department (department code).</small>
+
+        <label style="display:block; font-weight:bold; margin-bottom:6px; color:#362824;">3. Upload HOD Master Spreadsheet (.xlsx)</label>
+        <input type="file" name="hod_excel" accept=".xlsx" style="width:100%; margin-bottom:25px;">
+        <small style="display:block; margin-top:-19px; margin-bottom:25px; color:#593F3B;">Required columns: identity_code, mobile_number, full_name, assigned_department (branch).</small>
+
+        <label style="display:block; font-weight:bold; margin-bottom:6px; color:#362824;">4. Upload Student Registration Codes (.xlsx)</label>
+        <input type="file" name="registration_codes_excel" accept=".xlsx" style="width:100%; margin-bottom:25px;">
+        <small style="display:block; margin-top:-19px; margin-bottom:25px; color:#593F3B;">Required columns: pin, academic_year (YYYY-YYYY), registration_code.</small>
+
+        <button type="submit" style="width:100%; padding:14px; background:#6B4636; color:white; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;">
+            Upload the files
+        </button>
+    </form>
+
+    <p style="margin-top:20px; text-align:center;">
+        <a href="{% url 'staff_registration_admin_view' %}" style="color:#8B5A2E; font-weight:bold;">Review HOD and in-charge registrations</a>
+    </p>
+</div>
+{% endblock %}

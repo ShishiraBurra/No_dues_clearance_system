@@ -1,0 +1,10 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div class="admin-quick-actions">
+    <h2>Quick actions</h2>
+    <a href="{% url 'upload_master_list_view' %}">Manage student and staff rosters</a>
+    <a href="{% url 'staff_registration_admin_view' %}">Review HOD and in-charge registrations</a>
+</div>
+{{ block.super }}
+{% endblock %}

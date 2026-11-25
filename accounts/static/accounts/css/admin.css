@@ -1,0 +1,177 @@
+:root {
+    --primary: #6b4636;
+    --primary-dark: #362824;
+    --primary-light: #8b5a2e;
+    --page-background: #f9f6f0;
+    --panel-background: #fff;
+    --border-color: #efece6;
+}
+
+body,
+#container {
+    background: var(--page-background);
+}
+
+#header {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(54, 40, 36, 0.16);
+}
+
+#header a:link,
+#header a:visited,
+#branding h1,
+#branding h1 a:link,
+#branding h1 a:visited,
+#user-tools,
+#user-tools a:link,
+#user-tools a:visited {
+    color: #fff;
+}
+
+#branding h1 {
+    font-weight: 700;
+}
+
+.admin-quick-link {
+    display: inline-block;
+    margin: 0 12px 12px 0;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-quick-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+div.breadcrumbs {
+    background: #8b5a2e;
+    color: #fff;
+}
+
+div.breadcrumbs a {
+    color: #fff;
+}
+
+a:link,
+a:visited {
+    color: var(--primary-light);
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+.module,
+.module table,
+#changelist,
+.inline-group,
+.submit-row {
+    border-color: var(--border-color);
+    border-radius: 8px;
+}
+
+.module caption,
+.module h2,
+.module thead th,
+#changelist-filter h2 {
+    background: var(--primary);
+    color: #fff;
+}
+
+div,
+fieldset,
+.form-row {
+    border-color: var(--border-color);
+}
+
+input,
+textarea,
+select,
+.selector select {
+    border-color: #c9b9ae;
+    border-radius: 5px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--primary-light);
+    outline-color: var(--primary-light);
+}
+
+input[type="submit"],
+button,
+.submit-row input,
+a.button,
+.button,
+input.default {
+    background: var(--primary);
+    border-color: var(--primary);
+    border-radius: 6px;
+    color: #fff;
+}
+
+input[type="submit"]:hover,
+button:hover,
+.submit-row input:hover,
+a.button:hover,
+.button:hover,
+input.default:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+}
+
+.admin-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 24px;
+    padding: 18px 20px;
+    border: 1px solid var(--border-color);
+    border-left: 5px solid var(--primary-light);
+    border-radius: 8px;
+    background: var(--panel-background);
+}
+
+.admin-quick-actions h2 {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--primary-dark);
+    font-size: 18px;
+}
+
+.admin-quick-actions a {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-quick-actions a:hover {
+    background: var(--primary-light);
+    color: #fff;
+}
+
+#content h1 {
+    color: var(--primary-dark);
+}
+
+@media (max-width: 767px) {
+    #header {
+        padding: 12px 16px;
+    }
+
+    .admin-quick-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

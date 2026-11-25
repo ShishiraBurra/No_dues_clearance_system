@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | No Dues Administration{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+    <a href="{% url 'admin:index' %}">No Dues Administration</a>
+</div>
+{% endblock %}
+
+{% block nav-global %}
+<a class="admin-quick-link" href="{% url 'upload_master_list_view' %}">Roster uploads</a>
+<a class="admin-quick-link" href="{% url 'staff_registration_admin_view' %}">Staff registrations</a>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'accounts/css/admin.css' %}">
+{% endblock %}

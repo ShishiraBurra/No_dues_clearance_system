@@ -1,0 +1,278 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Student Dashboard - No Dues Clearance{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 950px;
+        margin: 40px auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
+
+    .welcome-header {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+        border-left: 6px solid #8B5A2E; 
+    }
+
+    .welcome-header h2 {
+        color: #362824;
+        font-size: 26px;
+    }
+
+    .welcome-header p {
+        color: #593F3B;
+        margin-top: 6px;
+        font-size: 15px;
+    }
+
+    .year-filter {
+        margin: 0 0 20px;
+    }
+
+    .year-filter label {
+        margin-right: 8px;
+        font-weight: bold;
+    }
+
+    .unbounded-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .unbounded-table th {
+        background: #6B4636; 
+        color: white;
+        padding: 18px 25px;
+        font-size: 16px;
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .clickable-row {
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .clickable-row:hover {
+        background: #FDFBF7; 
+    }
+
+    .unbounded-table td {
+        padding: 18px 25px;
+        font-size: 16px;
+        color: #362824;
+        border-bottom: 1px solid #EFECE6; 
+    }
+
+    .remarks-row {
+        background: #FFFBF9;
+        display: none; 
+    }
+
+    .remarks-row td {
+        padding: 15px 35px;
+        font-size: 14px;
+        color: #B42318; 
+        border-bottom: 1px solid #EFECE6;
+    }
+
+    .remarks-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .status-not-initiated {
+        background: #E5E7EB;
+        color: #4B5563; 
+    }
+
+    .status-pending {
+        background: #FEF3C7;
+        color: #D97706; 
+    }
+
+    .status-cleared {
+        background: #D1FAE5;
+        color: #059669; 
+    }
+
+    .status-rejected {
+        background: #FEE2E2;
+        color: #DC2626; 
+    }
+
+    .action-panel {
+        text-align: center;
+        margin-top: 35px;
+    }
+
+    .master-apply-btn {
+        background: #6B4636;
+        color: white;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(107, 70, 54, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .master-apply-btn:hover {
+        background: #8B5A2E; 
+        transform: translateY(-2px);
+    }
+
+    .master-apply-btn:disabled {
+        background: #BDC3C7;
+        color: #7F8C8D;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <div class="welcome-header">
+        <h2>Welcome Back, {{ request.user.first_name }} {{ request.user.last_name }}</h2>
+        <p>PIN: <strong>{{ student_profile.pin }}</strong> &nbsp;|&nbsp; Branch: {{ student_profile.branch|upper }} &nbsp;|&nbsp; Academic year: {{ academic_year }}</p>
+    </div>
+
+    {% if academic_years|length > 1 %}
+        <form method="get" class="year-filter">
+            <label for="academic-year">Academic year</label>
+            <select id="academic-year" name="academic_year" onchange="this.form.submit()">
+                {% for year in academic_years %}
+                    <option value="{{ year }}" {% if year == academic_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    {% endif %}
+
+    <table class="unbounded-table">
+        <thead>
+            <tr>
+                <th>College Verification Department</th>
+                <th>Clearance Progress</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            {% for record in student_profile.dues.all %}
+                <tr class="clickable-row" onclick="toggleRemarks('remarks-{{ record.id }}')">
+                    <td>{{ forloop.counter }}. {{ record.get_department_display }}</td>
+                    <td>
+                        <span class="status-badge status-{{ record.status }}">
+                            {{ record.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+
+                <tr id="remarks-{{ record.id }}" class="remarks-row" style="display: none;">
+                    <td colspan="2">
+                        <div class="remarks-content">
+                            {% if record.status == 'rejected' %}
+                                ❌ <strong>Rejection Reason:</strong> {{ record.staff_remarks }}
+                            {% elif record.staff_remarks %}
+                                <strong>Previous rejection reason:</strong> {{ record.staff_remarks }}
+                            {% elif record.status == 'cleared' %}
+                                <span style="color: #059669;">✔️ All facility records marked clear. No actions needed.</span>
+                            {% else %}
+                                ⏳ Verification process currently ongoing at desk.
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2" style="text-align: center; color: #7F8C8D; padding: 30px;">
+                        No clearance records found. Please contact administration.
+                    </td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+
+    <div class="action-panel">
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="academic_year" value="{{ academic_year }}">
+            {% if can_resubmit_departments %}
+                <button type="submit" name="action" value="resubmit_departments" class="master-apply-btn">
+                    I have completed the physical requirements — resubmit rejected departments
+                </button>
+            {% elif can_resubmit_hod %}
+                <p style="margin-bottom: 12px; color: #B42318;">
+                    HOD rejection reason: {{ student_profile.hod_rejection_reason }}
+                </p>
+                <button type="submit" name="action" value="resubmit_hod" class="master-apply-btn">
+                    I have completed the physical requirements — resubmit to HOD
+                </button>
+            {% elif can_apply %}
+                <button type="submit" class="master-apply-btn">
+                    Apply for No Dues Clearance
+                </button>
+            {% elif can_download_certificate %}
+                <a class="master-apply-btn" href="{% url 'download_no_dues_certificate' student_profile.id %}" style="display: inline-block; text-decoration: none; background: #059669;">
+                    Download Approved No Dues PDF
+                </a>
+            {% elif awaiting_hod_approval %}
+                <button type="button" class="master-apply-btn" disabled>
+                    All department clearances complete — awaiting HOD approval
+                </button>
+            {% elif awaiting_hod_reconsideration %}
+                <button type="button" class="master-apply-btn" disabled>
+                    Resubmitted — awaiting HOD reconsideration
+                </button>
+            {% elif not student_profile.is_active %}
+                <button type="button" class="master-apply-btn" disabled>
+                    Previous academic-year records are read-only
+                </button>
+            {% else %}
+                <button type="button" class="master-apply-btn" style="background-color: #95a5a6; cursor: not-allowed;" disabled>
+                    Clearance in progress ({{ cleared_count }}/{{ total_departments }} departments cleared)
+                </button>
+            {% endif %}
+        </form>
+    </div>
+
+</div>
+
+<script>
+    function toggleRemarks(rowId) {
+        var remarksRow = document.getElementById(rowId);
+        if (remarksRow) {
+            if (remarksRow.style.display === "table-row") {
+                remarksRow.style.display = "none";
+            } else {
+                remarksRow.style.display = "table-row";
+            }
+        }
+    }
+</script>
+{% endblock %}

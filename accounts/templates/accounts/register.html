@@ -1,0 +1,222 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Account Registration - No Dues System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+    }
+
+    .register-card {
+        background: white;
+        width: 100%;
+        max-width: 480px;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.11);
+    }
+
+    .register-card h2 {
+        text-align: center;
+        color: #8B5A2E; 
+        margin-bottom: 25px;
+        font-size: 24px;
+    }
+
+    .register-card label {
+        display: block;
+        margin-bottom: 7px;
+        color: #362824; 
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .register-card input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 18px;
+        border: 1px solid #593F3B;
+        border-radius: 8px;
+        font-size: 15px;
+        color: #362824;
+    }
+
+    .register-card input:focus {
+        outline: none;
+        border: 2px solid #8B5A2E;
+    }
+
+    .btn-master-submit {
+        width: 100%;
+        padding: 14px;
+        background: #6B4636; 
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: background 0.2s ease;
+    }
+
+    .btn-master-submit:hover {
+        background: #8B5A2E;
+    }
+
+    .login-redirect {
+        text-align: center;
+        margin-top: 25px;
+        color: #362824;
+        font-size: 14px;
+    }
+
+    .login-redirect a {
+        color: #8B5A2E;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    /* Error Banner Style styling matching your theme palette color codes */
+    .error-alert-banner {
+        background-color: #FEE2E2; 
+        color: #DC2626; 
+        padding: 12px; 
+        border-radius: 8px; 
+        margin-bottom: 20px; 
+        font-size: 14px;
+        font-weight: bold; 
+        border: 1px solid #FCA5A5;
+    }
+
+    .message-alert-banner {
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #93C5FD;
+        border-radius: 8px;
+        background: #DBEAFE;
+        color: #1E40AF;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .message-alert-banner.success {
+        border-color: #6EE7B7;
+        background: #D1FAE5;
+        color: #065F46;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-page-wrapper">
+    <div class="register-card">
+        <h2>Create Account</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message-alert-banner {{ message.tags }}" role="status">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% if staff_message %}
+            <div class="error-alert-banner" style="background:#D1FAE5; color:#065F46; border-color:#6EE7B7;">
+                {{ staff_message }}
+            </div>
+        {% endif %}
+        {% if error %}
+            <div class="error-alert-banner">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <h3 style="color:#6B4636; margin-bottom:15px;">Student registration</h3>
+        <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+            <input type="hidden" name="registration_flow" value="student">
+            <label>USER ID</label>
+            <input 
+                type="text" 
+                name="user_pin" 
+                placeholder="e.g., 24001-cs-300" 
+                required
+            >
+
+            <label>Registered Mobile Number</label>
+            <input
+                type="tel"
+                name="mobile_number"
+                placeholder="Enter registered mobile number"
+                required
+            >
+            <label>College-Issued Registration Code</label>
+            <input 
+                type="text" 
+                name="registration_code" 
+                placeholder="Enter the code provided by your college" 
+                required
+            >
+            <label>Create Password</label>
+            <input 
+                type="password" 
+                name="password" 
+                placeholder="Enter password" 
+                required
+            >
+            <label>Confirm Password</label>
+            <input 
+                type="password" 
+                name="confirm_password" 
+                placeholder="Confirm password" 
+                required
+            >
+            <button type="submit" class="btn-master-submit">Register Student Account</button>
+        </form>
+
+        <hr style="margin:28px 0; border:0; border-top:1px solid #EFECE6;">
+        <h3 style="color:#6B4636; margin-bottom:8px;">HOD / in-charge registration</h3>
+        <p style="color:#593F3B; font-size:14px; margin-bottom:16px;">
+            Submit your roster ID and registered mobile number. The college admin must approve your request before you set a password.
+        </p>
+        <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+            <input type="hidden" name="registration_flow" value="staff_request">
+            <label>Staff ID</label>
+            <input type="text" name="user_pin" value="{{ staff_form_pin }}" placeholder="Enter your college staff ID" required>
+            <label>Registered Mobile Number</label>
+            <input type="tel" name="mobile_number" placeholder="Enter registered mobile number" required>
+            <button type="submit" class="btn-master-submit">Submit Staff Registration Request</button>
+        </form>
+
+        <hr style="margin:28px 0; border:0; border-top:1px solid #EFECE6;">
+        <h3 style="color:#6B4636; margin-bottom:8px;">Complete approved staff registration</h3>
+        <p style="color:#593F3B; font-size:14px; margin-bottom:16px;">
+            After admin approval, enter the same staff ID and registered mobile number to create your password.
+        </p>
+        <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+            <input type="hidden" name="registration_flow" value="staff_complete">
+            <label>Staff ID</label>
+            <input type="text" name="user_pin" value="{{ staff_form_pin }}" placeholder="Enter your college staff ID" required>
+            <label>Registered Mobile Number</label>
+            <input type="tel" name="mobile_number" placeholder="Enter registered mobile number" required>
+            <label>Create Password</label>
+            <input type="password" name="password" placeholder="Enter password" required>
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" placeholder="Confirm password" required>
+            <button type="submit" class="btn-master-submit">Complete Staff Registration</button>
+        </form>
+
+        <div class="login-redirect">
+            <a href="{% url 'login' %}">Already have an account? Login here</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

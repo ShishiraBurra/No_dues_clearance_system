@@ -1,0 +1,470 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}HOD Master Dashboard - No Dues{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
+
+    .hod-header {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+        border-left: 6px solid #8B5A2E; 
+    }
+
+    .hod-header h2 {
+        color: #362824;
+        font-size: 26px;
+    }
+
+    .hod-header p {
+        color: #593F3B;
+        margin-top: 6px;
+        font-size: 15px;
+    }
+
+    .page-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 25px;
+        border-bottom: 2px solid #EFECE6;
+        padding-bottom: 10px;
+    }
+
+    .page-tab-btn {
+        padding: 12px 24px;
+        background: none;
+        border: none;
+        color: #6B4636;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .page-tab-btn.active {
+        color: #8B5A2E;
+        border-bottom: 3px solid #8B5A2E;
+    }
+
+    .category-section-title {
+        color: #362824;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 30px 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .unbounded-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .unbounded-table th {
+        background: #6B4636; 
+        color: white;
+        padding: 15px 25px;
+        font-size: 15px;
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .unbounded-table td {
+        padding: 15px 25px;
+        font-size: 15px;
+        color: #362824;
+        border-bottom: 1px solid #EFECE6; 
+        vertical-align: middle;
+    }
+
+    .ratio-link {
+        color: #8B5A2E;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .details-drawer-row {
+        background: #FFFDFB;
+        display: none; 
+    }
+
+    .details-drawer-row td {
+        padding: 20px 40px;
+        border-bottom: 1px solid #EFECE6;
+    }
+
+    .drawer-grid {
+        display: flex;
+        gap: 40px;
+    }
+
+    .drawer-col {
+        flex: 1;
+    }
+
+    .drawer-col h4 {
+        margin-bottom: 10px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .list-pending-depts {
+        color: #D97706; 
+        list-style-type: square;
+        padding-left: 20px;
+    }
+
+    .list-pending-depts li {
+        margin-bottom: 6px;
+    }
+
+    .list-rejected-depts {
+        color: #DC2626; 
+        list-style: none;
+    }
+
+    .list-rejected-depts li {
+        margin-bottom: 8px;
+        padding-left: 15px;
+        border-left: 3px solid #DC2626;
+    }
+
+    .reject-remark {
+        display: block;
+        font-size: 13px;
+        color: #593F3B;
+        margin-top: 2px;
+    }
+
+    .btn-hod {
+        padding: 10px 22px;
+        font-size: 14px;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .btn-hod-accept {
+        background: #10B981;
+        color: white;
+    }
+
+    .btn-hod-accept.pressed-state {
+        background: #047857 !important;
+        box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.35) !important;
+        transform: translateY(1px);
+    }
+
+    .btn-hod-accept.accepted-state {
+        background: #047857;
+        cursor: default;
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,0.3);
+    }
+
+    .btn-hod-reject {
+        background: #EF4444;
+        color: white;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+
+    <div class="hod-header">
+        <h2>{{ request.user.hod_profile.managing_branch|upper }} HOD Portal</h2>
+        <p>Branch Controller: <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong> &nbsp;|&nbsp; Academic year: {{ academic_year }}</p>
+    </div>
+
+    {% if academic_years|length > 1 %}
+        <form method="get" style="margin-bottom: 20px;">
+            <label for="academic-year">Academic year</label>
+            <select id="academic-year" name="academic_year" onchange="this.form.submit()">
+                {% for year in academic_years %}
+                    <option value="{{ year }}" {% if year == academic_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    {% endif %}
+
+    <div class="page-tabs">
+        <button id="tab1-btn" class="page-tab-btn active" onclick="switchPage(1)">Page 1: Ready to Clear</button>
+        <button id="tab2-btn" class="page-tab-btn" onclick="switchPage(2)">Page 2: Branch Ledger</button>
+    </div>
+
+    <div id="hod-page-1">
+        <table class="unbounded-table">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>PIN</th>
+                    <th>Final Executive Clearance Authorizations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in ready_to_clear_students %}
+                <tr id="hod-row-{{ profile.id }}">
+                    <td>{{ profile.user.first_name }} {{ profile.user.last_name }}</td>
+                    <td><strong>{{ profile.pin }}</strong></td>
+                    <td>
+                        {% if profile.is_active %}
+                        <div style="display: flex; gap: 10px;">
+                            {% if profile.is_approved %}
+                            <button type="button" id="hod-acc-{{ profile.id }}" class="btn-hod btn-hod-accept accepted-state" disabled>Accepted</button>
+                            {% else %}
+                            <button type="button" id="hod-acc-{{ profile.id }}" class="btn-hod btn-hod-accept" onclick="hodAcceptTrigger('{{ profile.id }}')">Accept</button>
+                            {% endif %}
+                            <button type="button" id="hod-rej-{{ profile.id }}" class="btn-hod btn-hod-reject" onclick="hodRejectTrigger('{{ profile.id }}')">Reject</button>
+                        </div>
+                        {% if profile.hod_rejection_reason %}
+                        <div style="font-size: 13px; color: #DC2626; margin-top: 5px;">
+                            Student resubmitted. Previous rejection reason: {{ profile.hod_rejection_reason }}
+                        </div>
+                        {% endif %}
+                        {% else %}
+                            Previous academic-year record (read-only)
+                        {% endif %}
+                        <div id="hod-remark-{{ profile.id }}" style="font-size: 13px; color: #DC2626; margin-top: 5px; font-weight: bold;"></div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #7F8C8D; padding: 30px;">
+                        No students are currently waiting with 15 approvals in the final master queue.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="hod-page-2" style="display: none;">
+        
+        <div class="category-section-title" style="color: #059669;">🟢 Category 1: Cleared Roster</div>
+        <table class="unbounded-table">
+            <thead>
+                <tr>
+                    <th>PIN</th>
+                    <th>Student Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in cleared_students %}
+                <tr>
+                    <td><strong>{{ student.pin }}</strong></td>
+                    <td>{{ student.user.first_name }} {{ student.user.last_name }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" style="text-align: center; color: #7F8C8D; padding: 25px;">No students fully cleared yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="category-section-title" style="color: #D97706;">🟡 Category 2: Pending Processing Verification</div>
+        <table class="unbounded-table">
+            <thead>
+                <tr>
+                    <th>PIN</th>
+                    <th>Student Name</th>
+                    <th>Clearance Progression Ratio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in pending_students %}
+                <tr class="clickable-row">
+                    <td><strong>{{ student.pin }}</strong></td>
+                    <td>{{ student.user.first_name }} {{ student.user.last_name }}</td>
+                    <td>
+                        <span class="ratio-link" onclick="toggleRatioDrawer('drawer-{{ student.id }}')">
+                            {{ student.cleared_count }} / 15 Approved
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr id="drawer-{{ student.id }}" class="details-drawer-row">
+                    <td colspan="3">
+                        <div class="drawer-grid">
+                            <div class="drawer-col">
+                                <h4 style="color: #D97706;">⏳ Pending Departments</h4>
+                                <ul class="list-pending-depts">
+                                    {% for record in student.dues.all %}
+                                        {% if record.status == 'pending' %}
+                                            <li>{{ record.get_department_display }}</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            
+                            <div class="drawer-col">
+                                <h4 style="color: #DC2626;">❌ Rejected Departments</h4>
+                                <ul class="list-rejected-depts">
+                                    {% for record in student.dues.all %}
+                                        {% if record.status == 'rejected' %}
+                                            <li>
+                                                <strong>{{ record.get_department_display }}</strong>
+                                                <span class="reject-remark">Reason: {{ record.staff_remarks }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #7F8C8D; padding: 25px;">No active pending applications currently tracking.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="category-section-title" style="color: #4B5563;">⚪ Category 3: Inactive (Not Applied)</div>
+        <table class="unbounded-table">
+            <thead>
+                <tr>
+                    <th>PIN</th>
+                    <th>Student Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in inactive_students %}
+                <tr>
+                    <td><strong>{{ student.pin }}</strong></td>
+                    <td>{{ student.user.first_name }} {{ student.user.last_name }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" style="text-align: center; color: #7F8C8D; padding: 25px;">All verified students have initiated their clearance tracking.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function switchPage(pageNumber) {
+        var page1 = document.getElementById('hod-page-1');
+        var page2 = document.getElementById('hod-page-2');
+        var btn1 = document.getElementById('tab1-btn');
+        var btn2 = document.getElementById('tab2-btn');
+
+        if(pageNumber === 1) {
+            page1.style.display = "block";
+            page2.style.display = "none";
+            btn1.classList.add('active');
+            btn2.classList.remove('active');
+        } else {
+            page1.style.display = "none";
+            page2.style.display = "block";
+            btn1.classList.remove('active');
+            btn2.classList.add('active');
+        }
+    }
+
+    function toggleRatioDrawer(drawerId) {
+        var drawer = document.getElementById(drawerId);
+        if (drawer) {
+            drawer.style.display = drawer.style.display === "table-row" ? "none" : "table-row";
+        }
+    }
+
+    window.hodAcceptTrigger = function(profileId) {
+        const csrftoken = getCookie('csrftoken');
+        
+        fetch("{% url 'update_hod_signoff_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ profile_id: profileId, action: 'clear' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                var accBtn = document.getElementById('hod-acc-' + profileId);
+                if (accBtn) {
+                    accBtn.classList.remove('pressed-state');
+                    accBtn.classList.add('accepted-state');
+                    accBtn.textContent = 'Accepted';
+                    accBtn.disabled = true;
+                }
+                document.getElementById('hod-remark-' + profileId).innerHTML = "";
+            } else {
+                alert("Master verification block: " + data.message);
+            }
+        });
+    };
+
+    window.hodRejectTrigger = function(profileId) {
+        var reason = prompt("Enter master executive reason for rejection:");
+        if (reason !== null && reason.trim() !== "") {
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch("{% url 'update_hod_signoff_api' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ profile_id: profileId, action: 'reject', remark: reason })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    var accBtn = document.getElementById('hod-acc-' + profileId);
+                    if (accBtn) {
+                        accBtn.classList.remove('pressed-state', 'accepted-state');
+                        accBtn.textContent = 'Accept';
+                        accBtn.disabled = false;
+                    }
+                    var row = document.getElementById('hod-row-' + profileId);
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    alert("Database insertion failure: " + data.message);
+                }
+            });
+        }
+    };
+</script>
+
+{% endblock %}

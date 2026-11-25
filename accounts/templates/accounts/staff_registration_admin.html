@@ -1,0 +1,69 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Staff Registration Review - No Dues System{% endblock %}
+
+{% block content %}
+<main style="max-width:1000px; margin:40px auto; padding:24px; font-family:Arial,sans-serif;">
+    <header style="background:white; padding:24px; border-radius:12px; border-left:6px solid #8B5A2E; margin-bottom:24px;">
+        <h1 style="color:#362824; font-size:24px;">HOD and In-Charge Registration Requests</h1>
+        <p style="color:#593F3B; margin-top:8px;">Approve a request before the staff member can create a password and access their dashboard.</p>
+        <a href="{% url 'upload_master_list_view' %}" style="display:inline-block; margin-top:12px; color:#8B5A2E; font-weight:bold;">Back to roster administration</a>
+    </header>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p style="padding:12px; margin-bottom:12px; border-radius:6px; background:#D1FAE5; color:#065F46; font-weight:bold;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <table style="width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden;">
+        <thead>
+            <tr style="background:#6B4636; color:white; text-align:left;">
+                <th style="padding:14px;">Staff member</th>
+                <th style="padding:14px;">ID / role</th>
+                <th style="padding:14px;">Assignment</th>
+                <th style="padding:14px;">Status</th>
+                <th style="padding:14px;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for staff_request in staff_requests %}
+                <tr style="border-bottom:1px solid #EFECE6;">
+                    <td style="padding:14px;">
+                        <strong>{{ staff_request.roster_entry.full_name }}</strong><br>
+                        {{ staff_request.roster_entry.mobile_number }}
+                    </td>
+                    <td style="padding:14px;">
+                        {{ staff_request.roster_entry.pin }}<br>
+                        {{ staff_request.roster_entry.get_allowed_role_display }}
+                    </td>
+                    <td style="padding:14px;">
+                        {% if staff_request.roster_entry.allowed_role == 'in_charge' %}
+                            {{ staff_request.roster_entry.assigned_department }}
+                        {% else %}
+                            {{ staff_request.roster_entry.student_branch|upper }}
+                        {% endif %}
+                    </td>
+                    <td style="padding:14px;">{{ staff_request.get_status_display }}</td>
+                    <td style="padding:14px;">
+                        {% if staff_request.status == 'pending' %}
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="request_id" value="{{ staff_request.id }}">
+                                <button type="submit" name="action" value="approve" style="padding:8px 12px; background:#059669; color:white; border:0; border-radius:5px; font-weight:bold; cursor:pointer;">Accept registration</button>
+                                <button type="submit" name="action" value="reject" style="padding:8px 12px; background:#DC2626; color:white; border:0; border-radius:5px; font-weight:bold; cursor:pointer;">Reject</button>
+                            </form>
+                        {% else %}
+                            Waiting for staff password setup
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" style="padding:24px; text-align:center; color:#593F3B;">No staff registration requests need review.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

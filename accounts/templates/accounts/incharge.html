@@ -1,0 +1,290 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Department In-Charge Dashboard - No Dues{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1050px;
+        margin: 40px auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
+
+    .faculty-header {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+        border-left: 6px solid #6B4636; 
+    }
+
+    .faculty-header h2 {
+        color: #362824;
+        font-size: 26px;
+    }
+
+    .faculty-header p {
+        color: #593F3B;
+        margin-top: 6px;
+        font-size: 15px;
+    }
+
+    .year-filter {
+        margin: 0 0 20px;
+    }
+
+    .category-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    .tab-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: white;
+        color: #6B4636;
+        border: 1px solid #6B4636;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+        background: #6B4636;
+        color: white;
+    }
+
+    .unbounded-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .unbounded-table th {
+        background: #6B4636; 
+        color: white;
+        padding: 18px 25px;
+        font-size: 16px;
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .unbounded-table td {
+        padding: 18px 25px;
+        font-size: 16px;
+        color: #362824;
+        border-bottom: 1px solid #EFECE6; 
+        vertical-align: middle;
+    }
+
+    .action-container {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .btn-action {
+        padding: 10px 24px;
+        font-size: 15px;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .btn-accept {
+        background: #10B981;
+        color: white;
+        box-shadow: 0 3px 6px rgba(16, 185, 129, 0.15);
+    }
+
+    .btn-accept.pressed-state {
+        background: #047857 !important; 
+        color: #A7F3D0 !important;
+        box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.35) !important; 
+    }
+
+    .btn-reject {
+        background: #EF4444;
+        color: white;
+        box-shadow: 0 3px 6px rgba(239, 68, 68, 0.15);
+    }
+
+    .live-remark-text {
+        font-size: 14px;
+        color: #DC2626;
+        margin-top: 5px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <div class="faculty-header">
+        <h2>{{ request.user.incharge_profile.get_assigned_department_display }} Incharge Portal</h2>
+        <p>Faculty Desk In-Charge: <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong> &nbsp;|&nbsp; Academic year: {{ academic_year }}</p>
+    </div>
+
+    {% if academic_years %}
+        <form method="get" class="year-filter">
+            <input type="hidden" name="branch" value="{{ current_branch }}">
+            <label for="academic-year">Academic year</label>
+            <select id="academic-year" name="academic_year" onchange="this.form.submit()">
+                {% for year in academic_years %}
+                    <option value="{{ year }}" {% if year == academic_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    {% endif %}
+
+    <div class="category-tabs">
+        <a href="?branch=cs&amp;academic_year={{ academic_year|urlencode }}" class="tab-btn {% if current_branch == 'cs' or not current_branch %}active{% endif %}">CSE</a>
+        <a href="?branch=ec&amp;academic_year={{ academic_year|urlencode }}" class="tab-btn {% if current_branch == 'ec' %}active{% endif %}">ECE</a>
+        <a href="?branch=me&amp;academic_year={{ academic_year|urlencode }}" class="tab-btn {% if current_branch == 'me' %}active{% endif %}">MECH</a>
+        <a href="?branch=ce&amp;academic_year={{ academic_year|urlencode }}" class="tab-btn {% if current_branch == 'ce' %}active{% endif %}">CIVIL</a>
+        <a href="?branch=au&amp;academic_year={{ academic_year|urlencode }}" class="tab-btn {% if current_branch == 'au' %}active{% endif %}">AUTOMOBILE</a>
+        <a href="?branch=ee&amp;academic_year={{ academic_year|urlencode }}" class="tab-btn {% if current_branch == 'ee' %}active{% endif %}">EEE</a>
+
+
+    </div>
+
+    <table class="unbounded-table">
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>PIN</th>
+                <th>Clearance Verification Controls</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            {% for record in dues_records %}
+                <tr id="row-{{ record.id }}">
+                    <td>{{ record.student.user.first_name }} {{ record.student.user.last_name }}</td>
+                    <td><strong>{{ record.student.pin }}</strong></td>
+                    <td>
+                        {% if can_update_year and record.student.is_active %}
+                        <div class="action-container">
+                            <button type="button" 
+                                    id="accept-{{ record.id }}" 
+                                    class="btn-action btn-accept {% if record.status == 'cleared' %}pressed-state{% endif %}" 
+                                    onclick="executeAccept('{{ record.id }}')">
+                                Accept
+                            </button>
+                            
+                            <button type="button" 
+                                    id="reject-{{ record.id }}" 
+                                    class="btn-action btn-reject" 
+                                    onclick="executeReject('{{ record.id }}')">
+                                Reject
+                            </button>
+                        </div>
+                        
+                        <div id="remark-slot-{{ record.id }}" class="live-remark-text">
+                            {% if record.status == 'rejected' %}
+                                ❌ Rejection Reason: {{ record.staff_remarks }}
+                            {% elif record.staff_remarks %}
+                                Previous rejection reason: {{ record.staff_remarks }}
+                            {% endif %}
+                        </div>
+                        {% else %}
+                            {{ record.get_status_display }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #7F8C8D; padding: 40px; font-size: 16px;">
+                        No pending clearance applications found for this branch section.
+                    </td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    window.executeAccept = function(recordId) {
+        const csrftoken = getCookie('csrftoken');
+        
+        fetch("{% url 'update_department_due_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ record_id: recordId, action: 'clear' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                var acceptBtn = document.getElementById('accept-' + recordId);
+                acceptBtn.classList.add('pressed-state');
+                document.getElementById('remark-slot-' + recordId).innerHTML = "✔️ Cleared successfully.";
+            } else {
+                alert("Database insertion failure: " + data.message);
+            }
+        });
+    };
+
+    window.executeReject = function(recordId) {
+        var reason = prompt("Enter the precise reason for clearance rejection:");
+        
+        if (reason !== null && reason.trim() !== "") {
+            const csrftoken = getCookie('csrftoken');
+            
+            // 🛠️ Fixed: Reconstructed and cleaned up the broken/interrupted fetch request block
+            fetch("{% url 'update_department_due_api' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ record_id: recordId, action: 'reject', remark: reason })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    var acceptBtn = document.getElementById('accept-' + recordId);
+                    acceptBtn.classList.remove('pressed-state');
+                    document.getElementById('remark-slot-' + recordId).textContent = "❌ Rejection Reason: " + reason;
+                    var row = document.getElementById('row-' + recordId);
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    alert("Error saving rejection state: " + data.message);
+                }
+            });
+        }
+    };
+</script>
+{% endblock %}
